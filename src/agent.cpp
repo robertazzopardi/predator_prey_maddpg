@@ -3,21 +3,15 @@
 #include "direction.h"
 #include "env.h"
 #include "models.h"
-#include <Colour.h> // for Colour
+#include <Colour.h>
 #include <EnvController.h>
-#include <algorithm>   // for any_of
-#include <iostream>    // for operator<<, basic_ostream, endl, cout
-#include <sys/cdefs.h> // for __unused
-#include <type_traits> // for remove_extent_t
+#include <algorithm>
+#include <iostream>
+#include <sys/cdefs.h>
+#include <type_traits>
 
 agent::Agent::Agent(bool verbose, colour::Colour colour)
     : robosim::robotmonitor::RobotMonitor(verbose, colour), MSELoss() {
-
-    // actor = std::make_shared<models::actor::Actor>(10, 4);
-    // targetActor = std::make_shared<models::actor::Actor>(10, 4);
-
-    // critic = std::make_shared<models::critic::Critic>(10, 1);
-    // targetCritic = std::make_shared<models::critic::Critic>(10, 1);
 
     auto obsDim = 10;
     auto actionDim = 4;
@@ -106,7 +100,7 @@ bool agent::Agent::canMove() {
     auto y = dir.py(getY());
 
     if (std::any_of(env::robots.begin(), env::robots.end(),
-                    [&](const robosim::robotmonitor::RobotPtr &r) {
+                    [&](const robosim::envcontroller::RobotPtr &r) {
                         return (r.get() != this) &&
                                (r->getX() == x && r->getY() == y);
                     })) {

@@ -2,8 +2,8 @@
 #ifndef __AGENT_H__
 #define __AGENT_H__
 
-// #include "action.h"
 #include "direction.h"
+#include "env.h"
 #include <RobotMonitor.h>
 #include <memory>
 #include <torch/nn/modules/loss.h>
@@ -36,9 +36,13 @@ struct Critic;
 
 namespace agent {
 
-using UpdateData = std::tuple<std::vector<float>, std::vector<at::Tensor>,
-                              std::vector<at::Tensor>, std::vector<at::Tensor>,
-                              std::vector<at::Tensor>, at::Tensor>;
+using UpdateData =
+    std::tuple<std::vector<float>, std::vector<at::Tensor>,
+               std::array<at::Tensor, env::BATCH_SIZE>,
+               std::array<at::Tensor, env::BATCH_SIZE>,
+               std::array<at::Tensor, env::BATCH_SIZE>, at::Tensor>;
+
+// std::array<at::Tensor, env::BATCH_SIZE>
 
 class Agent : public robosim::robotmonitor::RobotMonitor {
   private:
@@ -68,10 +72,9 @@ class Agent : public robosim::robotmonitor::RobotMonitor {
 
     virtual float getReward(action::Action) = 0;
 
-    // virtual action::Action getAction(torch::Tensor) = 0;
-    virtual float getAction(torch::Tensor) = 0;
+    virtual float getAction(at::Tensor) = 0;
 
-    virtual torch::Tensor getObservation() = 0;
+    virtual at::Tensor getObservation() = 0;
 
     virtual void update(UpdateData) = 0;
 

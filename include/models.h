@@ -2,8 +2,8 @@
 #ifndef __MODELS_H__
 #define __MODELS_H__
 
-#include <torch/nn/module.h>         // for Module
-#include <torch/nn/modules/linear.h> // for Linear
+#include <torch/nn/module.h>
+#include <torch/nn/modules/linear.h>
 
 namespace at {
 class Tensor;

@@ -10,10 +10,10 @@
 
 prey::Prey::Prey(bool verbose, colour::Colour colour)
     : agent::Agent(verbose, colour), mt(std::random_device{}()),
-      randomAction(0, action::ActionVec.size() - 1) {}
+      randomAction(0, action::ACTION_COUNT) {}
 
 // action::Action prey::Prey::getAction(torch::Tensor states __unused) {
-//     return action::ActionVec[randomAction(mt)];
+//     return action::ACTIONS[randomAction(mt)];
 // }
 
 float prey::Prey::getAction(torch::Tensor states __unused) {

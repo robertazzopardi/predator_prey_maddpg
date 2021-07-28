@@ -3,7 +3,6 @@
 #define __ENV_H__
 
 #include "action.h"
-#include "prey.h"
 #include <EnvController.h>
 #include <RobotMonitor.h>
 #include <memory>
@@ -12,6 +11,10 @@
 
 namespace at {
 class Tensor;
+}
+
+namespace prey {
+class Prey;
 }
 
 namespace env {
@@ -27,12 +30,13 @@ static inline auto getEnvSize() {
 };
 
 static constexpr auto hunterCount = 4;
+
 extern std::shared_ptr<prey::Prey> prey;
-extern robosim::robotmonitor::MonitorVec robots;
+extern robosim::envcontroller::MonitorVec robots;
 
 std::vector<at::Tensor> reset();
 
-bool isSamePosition(robosim::robotmonitor::RobotPtr);
+bool isSamePosition(robosim::envcontroller::RobotPtr);
 
 std::tuple<std::vector<at::Tensor>, std::vector<float>, bool>
     step(std::vector<float>);

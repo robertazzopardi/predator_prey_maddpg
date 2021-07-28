@@ -2,9 +2,10 @@
 #ifndef __MADDPG_H__
 #define __MADDPG_H__
 
-#include "action.h" // for Action
-#include "env.h"
-#include "replayBuffer.h"
+// #include "action.h"
+// #include "env.h"
+// #include "replayBuffer.h"
+// #include <array>
 #include <vector>
 
 namespace at {
@@ -13,11 +14,11 @@ class Tensor;
 
 namespace maddpg {
 
-std::vector<float> getActions(std::vector<torch::Tensor>);
+std::vector<float> getActions(std::vector<at::Tensor>);
 
-void update(int);
+void update();
 
-void run(int, int, int);
+void run(int, int);
 
 } // namespace maddpg
 

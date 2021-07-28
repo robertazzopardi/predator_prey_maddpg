@@ -13,7 +13,7 @@ std::shared_ptr<prey::Prey> env::prey =
     std::make_shared<prey::Prey>(false, colour::OFF_RED);
 
 int main(void) {
-    env::robots = robosim::robotmonitor::getRobots<hunter::Hunter>(
+    env::robots = robosim::envcontroller::getRobots<hunter::Hunter>(
         env::hunterCount, colour::OFF_BLACK);
 
     env::robots.push_back(env::prey);
@@ -26,7 +26,7 @@ int main(void) {
     //     env::reset();
     // });
 
-    std::thread th(maddpg::run, 500, 300, env::BATCH_SIZE);
+    std::thread th(maddpg::run, 500, 300);
 
     robosim::envcontroller::startSimulation();
 

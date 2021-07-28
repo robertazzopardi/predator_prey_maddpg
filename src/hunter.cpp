@@ -2,6 +2,7 @@
 #include "direction.h"
 #include "env.h"
 #include "models.h"
+#include "prey.h"
 #include <ATen/Functions.h>
 #include <ATen/TensorOperators.h>
 #include <Colour.h>
@@ -14,16 +15,16 @@
 #include <torch/nn/utils/clip_grad.h>
 #include <type_traits>
 
-// namespace c10 {
-// template <typename T> class ArrayRef;
-// }
+namespace {
 
-namespace {} // namespace
+// void copyParameters() {}
+
+} // namespace
 
 hunter::Hunter::Hunter(bool verbose, colour::Colour colour)
     : agent::Agent(verbose, colour),
       criticOptimiser(critic->parameters(), 0.001),
-      actorOptimiser(actor->parameters(), 0.0004) {
+      actorOptimiser(actor->parameters(), 0.04) {
 
     for (size_t i = 0; i < critic->parameters().size(); i++) {
         targetCritic->parameters()[i].data().copy_(
@@ -50,7 +51,7 @@ float hunter::Hunter::getReward(action::Action action) {
 float hunter::Hunter::getAction(torch::Tensor states) {
     auto output = actor->forward(states);
     auto nextAction = actor->nextAction(output);
-    // auto action = action::ActionVec[nextAction];
+    // auto action = action::ACTIONS[nextAction];
     // return action;
     return static_cast<float>(nextAction);
 }
@@ -80,7 +81,7 @@ void hunter::Hunter::update(agent::UpdateData updateData) {
           globalNextStateBatch, nextGlobalActions] = updateData;
 
     auto irb = torch::tensor(indivRewardBatchI);
-    irb.view({(int)irb.size(0), 1});
+    // irb.view({irb.size(0), 1});
 
     auto iob = torch::stack(indivObsBatch);
 
@@ -97,10 +98,9 @@ void hunter::Hunter::update(agent::UpdateData updateData) {
 
     auto currQ = critic->forward(gsb, gab);
     auto nextQ = targetCritic->forward(gnsb, nga);
+    // auto estimQ = irb + (gamma * nextQ);
+    auto estimQ = irb.reshape({irb.size(0), 1}) + (gamma * nextQ);
 
-    auto estimQ = irb + gamma * nextQ;
-
-    // std::cout << currQ.sizes() << estimQ.sizes() << std::endl;
     auto criticLoss = MSELoss(currQ, estimQ.detach());
     criticLoss.backward();
     torch::nn::utils::clip_grad_norm_(critic->parameters(), 0.5);

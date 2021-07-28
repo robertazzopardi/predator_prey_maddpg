@@ -1,24 +1,23 @@
 #include "env.h"
-#include "agent.h"                // for Agent
-#include <ATen/core/TensorBody.h> // for Tensor
+#include "agent.h"
+#include "prey.h"
+#include <ATen/core/TensorBody.h>
 #include <RobotMonitor.h>
-#include <algorithm>   // for any_of, uniform_int_distribution
-#include <random>      // for mt19937, random_device
-#include <stddef.h>    // for size_t
-#include <thread>      // for thread
-#include <type_traits> // for remove_extent_t
+#include <algorithm>
+#include <random>
+#include <stddef.h>
+#include <thread>
+#include <type_traits>
 
-robosim::robotmonitor::MonitorVec env::robots;
+robosim::envcontroller::MonitorVec env::robots;
 
 enum env::Mode env::mode = Mode::TRAIN;
-// enum env::Mode env::mode = Mode::EVAL;
 
 std::vector<torch::Tensor> env::reset() {
 
     std::vector<torch::Tensor> obs;
 
-    // for (auto robot : robots) {
-    for (size_t i = 0; i < robots.size() - 1; i++) {
+    for (size_t i = 0; i < env::hunterCount; i++) {
         do {
             auto randomX = getRandomPos();
             auto randomY = getRandomPos();
@@ -42,7 +41,7 @@ env::step(std::vector<float> actions) {
 
     std::vector<std::thread> threads;
 
-    for (size_t i = 0; i < env::robots.size() - 1; i++) {
+    for (size_t i = 0; i < env::hunterCount; i++) {
         auto agent = std::static_pointer_cast<agent::Agent>(env::robots[i]);
 
         threads.push_back(std::thread(&agent::Agent::executeAction, agent,
@@ -55,7 +54,7 @@ env::step(std::vector<float> actions) {
             th.join();
     }
 
-    for (size_t i = 0; i < env::robots.size() - 1; i++) {
+    for (size_t i = 0; i < env::hunterCount; i++) {
         auto agent = std::static_pointer_cast<agent::Agent>(env::robots[i]);
         nextStates.push_back(agent->getObservation());
         auto reward = agent->getReward(action::getActionFromIndex(actions[i]));
@@ -67,9 +66,9 @@ env::step(std::vector<float> actions) {
     return {nextStates, rewards, trapped};
 }
 
-bool env::isSamePosition(robosim::robotmonitor::RobotPtr robot) {
+bool env::isSamePosition(robosim::envcontroller::RobotPtr robot) {
     return std::any_of(env::robots.begin(), env::robots.end(),
-                       [robot](robosim::robotmonitor::RobotPtr &agent) {
+                       [robot](robosim::envcontroller::RobotPtr &agent) {
                            return robot != agent &&
                                   agent->getX() == robot->getX() &&
                                   agent->getY() == robot->getY();

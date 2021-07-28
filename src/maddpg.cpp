@@ -1,5 +1,8 @@
 #include "maddpg.h"
-#include "models.h"               // for Actor
+#include "env.h"
+#include "models.h" // for Actor
+#include "prey.h"
+#include "replayBuffer.h"
 #include <ATen/Functions.h>       // for stack
 #include <ATen/TensorOperators.h> // for Tensor...
 #include <ATen/core/TensorBody.h> // for Tensor
@@ -13,15 +16,12 @@
 #include <stddef.h>                                           // for size_t
 #include <thread>                                             // for sleep_for
 #include <torch/csrc/autograd/generated/variable_factories.h> // for tensor
-#include <type_traits>                                        // for remove...
+#include <type_traits>
 
 namespace agent {
 class Agent;
 }
 
-// std::vector<action::Action>
-// maddpg::getActions(std::vector<torch::Tensor> states) {
-//     std::vector<action::Action> actions;
 std::vector<float> maddpg::getActions(std::vector<torch::Tensor> states) {
     std::vector<float> actions;
 
@@ -35,10 +35,10 @@ std::vector<float> maddpg::getActions(std::vector<torch::Tensor> states) {
     return actions;
 }
 
-void maddpg::update(int batchSize) {
+void maddpg::update() {
     auto [obsBatch, indivActionBatch, indivRewardBatch, nextObsBatch,
           globalStateBatch, globalNextStateBatch, globalActionsBatch] =
-        replaybuffer::sample(batchSize);
+        replaybuffer::sample();
 
     for (size_t i = 0; i < env::hunterCount; i++) {
 
@@ -60,22 +60,26 @@ void maddpg::update(int batchSize) {
                     static_cast<float>(hunter->actor->nextAction(arr[row])));
             }
 
+            // std::cout << indexes.size() << std::endl;
+
             auto n = torch::tensor(indexes);
             nextGlobalActions.push_back(torch::stack(n, 0));
         }
 
-        auto tmp = torch::cat(nextGlobalActions, 0)
-                       .reshape({batchSize, env::hunterCount});
+        auto nextGlobalActionsTemp =
+            torch::cat(nextGlobalActions, 0)
+                .reshape({env::BATCH_SIZE, env::hunterCount});
 
         std::static_pointer_cast<agent::Agent>(env::robots[i])
             ->update({indivRewardBatchI, obsBatchI, globalStateBatch,
-                      globalActionsBatch, globalNextStateBatch, tmp});
+                      globalActionsBatch, globalNextStateBatch,
+                      nextGlobalActionsTemp});
         std::static_pointer_cast<agent::Agent>(env::robots[i])->updateTarget();
     }
 }
 
-void maddpg::run(int maxEpisodes, int maxSteps, int batchSize) {
-    std::vector<float> rewards;
+void maddpg::run(int maxEpisodes, int maxSteps) {
+    // std::vector<float> rewards;
 
     for (int episode = 0; episode < maxEpisodes; episode++) {
         // std::cout << "Episode: " << episode << std::endl;
@@ -106,9 +110,10 @@ void maddpg::run(int maxEpisodes, int maxSteps, int batchSize) {
 
                 states = nextStates;
 
-                if (static_cast<int>(replaybuffer::buffer.size()) > batchSize &&
-                    step % batchSize == 0) {
-                    update(batchSize);
+                if (static_cast<int>(replaybuffer::buffer.size()) >
+                        env::BATCH_SIZE &&
+                    step % env::BATCH_SIZE == 0) {
+                    update();
                 }
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
             }

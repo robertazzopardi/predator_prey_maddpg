@@ -4,9 +4,13 @@
 
 #include "action.h"
 #include "agent.h"
-#include <ATen/core/TensorBody.h>
-#include <algorithm> // for uniform_int_distribution
+// #include <ATen/core/TensorBody.h>
+#include <algorithm>
 #include <random>
+
+namespace at {
+class Tensor;
+}
 
 namespace colour {
 struct Colour;

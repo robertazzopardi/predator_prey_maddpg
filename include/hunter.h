@@ -2,13 +2,16 @@
 #ifndef __HUNTER_H__
 #define __HUNTER_H__
 
-#include "action.h" // for Action
+// #include "action.h"
 #include "agent.h"
-#include <ATen/core/TensorBody.h>
-#include <torch/optim/adam.h> // for Adam
+#include <torch/optim/adam.h>
 
 namespace colour {
 struct Colour;
+}
+
+namespace at {
+class Tensor;
 }
 
 namespace hunter {
