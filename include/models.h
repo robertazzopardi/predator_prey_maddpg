@@ -16,8 +16,6 @@ namespace actor {
 struct Actor : torch::nn::Module {
     Actor(int, int);
 
-    int obsDim, actionDim;
-
     torch::nn::Linear fc1{nullptr}, fc2{nullptr}, fc3{nullptr};
 
     at::Tensor forward(at::Tensor);
@@ -31,8 +29,6 @@ namespace critic {
 
 struct Critic : torch::nn::Module {
     Critic(int, int);
-
-    int obsDim, actionDim;
 
     // Use one of many "standard library" modules.
     torch::nn::Linear fc1{nullptr}, fc2{nullptr}, fc3{nullptr}, fc4{nullptr};

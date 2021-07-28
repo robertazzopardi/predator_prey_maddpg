@@ -1,29 +1,23 @@
 #include "replayBuffer.h"
 #include "env.h"
-#include <ATen/Functions.h>                                   // for stack
-#include <ATen/core/TensorBody.h>                             // for Tensor
-#include <__tuple>                                            // for tuple_...
-#include <algorithm>                                          // for sample
-#include <iterator>                                           // for back_i...
-#include <random>                                             // for random...
-#include <torch/csrc/autograd/generated/variable_factories.h> // for tensor
+#include <ATen/Functions.h>
+#include <ATen/core/TensorBody.h>
+#include <__tuple>
+#include <algorithm>
+#include <iterator>
+#include <random>
+#include <torch/csrc/autograd/generated/variable_factories.h>
 #include <vector>
 
-replaybuffer::ReplayBuffer::ReplayBuffer(int agentCount, int maxSize)
-    : buffer() {
-    this->agentCount = agentCount;
-    this->maxSize = maxSize;
-}
+std::vector<replaybuffer::Experience> replaybuffer::buffer;
 
-void replaybuffer::ReplayBuffer::push(replaybuffer::Experience experience) {
+void replaybuffer::push(replaybuffer::Experience experience) {
     buffer.push_back(experience);
 }
 
-replaybuffer::Sample replaybuffer::ReplayBuffer::sample(int batchSize) {
+replaybuffer::Sample replaybuffer::sample(int batchSize) {
     std::vector<std::vector<torch::Tensor>> obsBatch(
         env::hunterCount, std::vector<torch::Tensor>());
-    // std::vector<std::vector<action::Action>> indiviActionBatch(
-    //     env::hunterCount, std::vector<action::Action>());
     std::vector<std::vector<float>> indiviActionBatch(env::hunterCount,
                                                       std::vector<float>());
     std::vector<std::vector<float>> indiviRewardBatch(env::hunterCount,
@@ -50,22 +44,9 @@ replaybuffer::Sample replaybuffer::ReplayBuffer::sample(int batchSize) {
         }
 
         globalStateBatch.push_back(torch::cat(state));
-
-        // std::vector<float> af;
-        // std::transform(std::begin(action), std::end(action),
-        //                std::back_inserter(af), action::getActionIndexFloat);
-        // globalActionBatch.push_back(
-        //     torch::from_blob(af.data(), {(long)af.size(), 1}));
-
-        // std::cout << torch::tensor(action) << std::endl;
         globalActionBatch.push_back(torch::tensor(action));
-
         globalNextStateBatch.push_back(torch::cat(nextState));
     }
-
-    // for (auto var : globalActionBatch) {
-    //     std::cout << var << std::endl;
-    // }
 
     return Sample(obsBatch, indiviActionBatch, indiviRewardBatch, nextObsBatch,
                   globalStateBatch, globalNextStateBatch, globalActionBatch);

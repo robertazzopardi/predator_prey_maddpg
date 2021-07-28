@@ -53,7 +53,7 @@ bool prey::Prey::isTrapped() {
     return count > 3;
 }
 
-float prey::Prey::getReward() { return 0.0f; }
+float prey::Prey::getReward(action::Action action __unused) { return 0.0f; }
 
 void prey::Prey::update(agent::UpdateData __unused) {}
 

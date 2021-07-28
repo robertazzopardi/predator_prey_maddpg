@@ -29,7 +29,7 @@ class Prey : public agent::Agent {
 
     bool isTrapped();
 
-    float getReward();
+    float getReward(action::Action);
 
     void update(agent::UpdateData);
 

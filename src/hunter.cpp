@@ -36,7 +36,15 @@ hunter::Hunter::Hunter(bool verbose, colour::Colour colour)
     }
 }
 
-float hunter::Hunter::getReward() { return 0.0f; }
+float hunter::Hunter::getReward(action::Action action) {
+    if (action == action::Action::FORWARD) {
+        return 1.0f;
+    } else {
+        return -1.0f;
+    }
+
+    // return 0.0f;
+}
 
 // action::Action
 float hunter::Hunter::getAction(torch::Tensor states) {
@@ -84,9 +92,29 @@ void hunter::Hunter::update(agent::UpdateData updateData) {
 
     auto nga = nextGlobalActions;
 
+    // update critic
     criticOptimiser.zero_grad();
 
-    // auto currQ = critic->forward(gsb, gab);
+    auto currQ = critic->forward(gsb, gab);
+    auto nextQ = targetCritic->forward(gnsb, nga);
+
+    auto estimQ = irb + gamma * nextQ;
+
+    // std::cout << currQ.sizes() << estimQ.sizes() << std::endl;
+    auto criticLoss = MSELoss(currQ, estimQ.detach());
+    criticLoss.backward();
+    torch::nn::utils::clip_grad_norm_(critic->parameters(), 0.5);
+    criticOptimiser.step();
+
+    // update actor
+    actorOptimiser.zero_grad();
+
+    auto policyLoss = -critic->forward(gsb, gab).mean();
+    auto currPolOut = actor->forward(iob);
+    policyLoss += -(torch::pow(currPolOut, 2)).mean() * 1e-3;
+    policyLoss.backward();
+    torch::nn::utils::clip_grad_norm_(critic->parameters(), 0.5);
+    actorOptimiser.step();
 }
 
 void hunter::Hunter::updateTarget() {

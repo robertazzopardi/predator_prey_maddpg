@@ -31,7 +31,7 @@ class Hunter : public agent::Agent {
 
     bool isAtGoal();
 
-    float getReward();
+    float getReward(action::Action);
 
     void update(agent::UpdateData);
 

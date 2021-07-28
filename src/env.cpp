@@ -35,19 +35,16 @@ std::vector<torch::Tensor> env::reset() {
 
 std::tuple<std::vector<torch::Tensor>, std::vector<float>, bool>
 env::step(std::vector<float> actions) {
-    // env::step(std::vector<action::Action> actions) {
+
     std::vector<float> rewards;
 
     std::vector<torch::Tensor> nextStates;
 
     std::vector<std::thread> threads;
-    // vthreads threads;
 
     for (size_t i = 0; i < env::robots.size() - 1; i++) {
         auto agent = std::static_pointer_cast<agent::Agent>(env::robots[i]);
 
-        // threads.push_back(
-        //     std::thread(&agent::Agent::executeAction, agent, actions[i]));
         threads.push_back(std::thread(&agent::Agent::executeAction, agent,
                                       action::getActionFromIndex(actions[i])));
     }
@@ -61,7 +58,8 @@ env::step(std::vector<float> actions) {
     for (size_t i = 0; i < env::robots.size() - 1; i++) {
         auto agent = std::static_pointer_cast<agent::Agent>(env::robots[i]);
         nextStates.push_back(agent->getObservation());
-        rewards.push_back(agent->getReward());
+        auto reward = agent->getReward(action::getActionFromIndex(actions[i]));
+        rewards.push_back(reward);
     }
 
     bool trapped = env::prey->isTrapped();

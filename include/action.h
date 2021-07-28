@@ -3,6 +3,7 @@
 #define __ACTION_H__
 
 #include <array>
+// #include <iostream>
 
 namespace action {
 
@@ -30,16 +31,17 @@ static inline auto toString(Action ac) {
     }
 }
 
-static inline float getActionIndexFloat(enum Action action) {
-    auto it = std::find(ActionVec.begin(), ActionVec.end(), action);
+// static inline float getActionIndexFloat(enum Action action) {
+//     auto it = std::find(ActionVec.begin(), ActionVec.end(), action);
 
-    // If element was found
-    if (it != ActionVec.end()) {
-        return it - ActionVec.begin();
-    } else {
-        return -1.0f;
-    }
-}
+//     // If element was found
+//     if (it != ActionVec.end()) {
+//         std::cout << it - ActionVec.begin() << std::endl;
+//         return it - ActionVec.begin();
+//     } else {
+//         return -1.0f;
+//     }
+// }
 
 inline Action getActionFromIndex(int index) { return ActionVec[index]; }
 

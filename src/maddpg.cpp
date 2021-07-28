@@ -38,7 +38,7 @@ std::vector<float> maddpg::getActions(std::vector<torch::Tensor> states) {
 void maddpg::update(int batchSize) {
     auto [obsBatch, indivActionBatch, indivRewardBatch, nextObsBatch,
           globalStateBatch, globalNextStateBatch, globalActionsBatch] =
-        replayBuffer.sample(batchSize);
+        replaybuffer::sample(batchSize);
 
     for (size_t i = 0; i < env::hunterCount; i++) {
 
@@ -49,51 +49,19 @@ void maddpg::update(int batchSize) {
 
         std::vector<torch::Tensor> nextGlobalActions;
 
-        // for (size_t j = 0; j < env::hunterCount; j++) {
-        //     auto agent =
-        //     std::static_pointer_cast<agent::Agent>(env::robots[j]);
-
-        //     auto indivNextAction =
-        //         agent->actor->forward(torch::stack(nextObsBatchI));
-
-        //     std::vector<float> actionIndexs;
-        //     for (int l = 0; l < indivNextAction.size(0); l++) {
-        //         actionIndexs.push_back(static_cast<float>(
-        //             agent->actor->nextAction(indivNextAction[l])));
-        //     }
-        //     indivNextAction = torch::from_blob(actionIndexs.data(),
-        //                                        {(long)actionIndexs.size(),
-        //                                        1});
-
-        //     std::cout << indivActionBatch << std::endl;
-        //     nextGlobalActions.push_back(indivNextAction);
-        // }
-
-        // auto tmp = torch::cat(nextGlobalActions, 1);
-
         for (size_t j = 0; j < env::hunterCount; j++) {
             auto hunter =
                 std::static_pointer_cast<agent::Agent>(env::robots[j]);
             auto arr = hunter->actor->forward(torch::vstack(nextObsBatchI));
 
-            // std::array<float, env::BATCH_SIZE> indexes;
-            // for (int row = 0; row < arr.size(0); row++) {
-            //     auto y = arr[row];
-            //     indexes[row] =
-            //     static_cast<float>(hunter->actor->nextAction(y));
-            // }
             std::vector<float> indexes;
             for (int row = 0; row < arr.size(0); row++) {
-                auto y = arr[row];
-                // indexes[row] =
-                // static_cast<float>(hunter->actor->nextAction(y));
                 indexes.push_back(
-                    static_cast<float>(hunter->actor->nextAction(y)));
+                    static_cast<float>(hunter->actor->nextAction(arr[row])));
             }
 
             auto n = torch::tensor(indexes);
             nextGlobalActions.push_back(torch::stack(n, 0));
-            // std::cout << torch::stack(n, 0) << std::endl;
         }
 
         auto tmp = torch::cat(nextGlobalActions, 0)
@@ -134,11 +102,11 @@ void maddpg::run(int maxEpisodes, int maxSteps, int batchSize) {
                 // slow down evaluation a bit
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
             } else {
-                replayBuffer.push({states, actions, rewards, nextStates});
+                replaybuffer::push({states, actions, rewards, nextStates});
 
                 states = nextStates;
 
-                if (static_cast<int>(replayBuffer.buffer.size()) > batchSize &&
+                if (static_cast<int>(replaybuffer::buffer.size()) > batchSize &&
                     step % batchSize == 0) {
                     update(batchSize);
                 }

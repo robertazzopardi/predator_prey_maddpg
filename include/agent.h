@@ -66,7 +66,7 @@ class Agent : public robosim::robotmonitor::RobotMonitor {
 
     void executeAction(action::Action);
 
-    virtual float getReward() = 0;
+    virtual float getReward(action::Action) = 0;
 
     // virtual action::Action getAction(torch::Tensor) = 0;
     virtual float getAction(torch::Tensor) = 0;

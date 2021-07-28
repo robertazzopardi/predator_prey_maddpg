@@ -13,9 +13,6 @@ class Tensor;
 
 namespace maddpg {
 
-static replaybuffer::ReplayBuffer replayBuffer(env::hunterCount, 1000000);
-
-// std::vector<action::Action> getActions(std::vector<torch::Tensor>);
 std::vector<float> getActions(std::vector<torch::Tensor>);
 
 void update(int);

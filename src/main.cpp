@@ -1,13 +1,13 @@
 #include "env.h"
 #include "hunter.h"
 #include "maddpg.h"
-#include "prey.h"   // for Prey
-#include <Colour.h> // for OFF_BLACK, OFF_RED
+#include "prey.h"
+#include <Colour.h>
 #include <EnvController.h>
 #include <RobotMonitor.h>
-#include <memory>   // for make_shared, shared_ptr
-#include <stdlib.h> // for EXIT_SUCCESS
-#include <thread>   // for thread
+#include <memory>
+#include <stdlib.h>
+#include <thread>
 
 std::shared_ptr<prey::Prey> env::prey =
     std::make_shared<prey::Prey>(false, colour::OFF_RED);

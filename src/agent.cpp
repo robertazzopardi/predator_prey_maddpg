@@ -13,11 +13,35 @@
 agent::Agent::Agent(bool verbose, colour::Colour colour)
     : robosim::robotmonitor::RobotMonitor(verbose, colour), MSELoss() {
 
-    actor = std::make_shared<models::actor::Actor>(10, 4);
-    targetActor = std::make_shared<models::actor::Actor>(10, 4);
+    // actor = std::make_shared<models::actor::Actor>(10, 4);
+    // targetActor = std::make_shared<models::actor::Actor>(10, 4);
 
-    critic = std::make_shared<models::critic::Critic>(10, 1);
-    targetCritic = std::make_shared<models::critic::Critic>(10, 1);
+    // critic = std::make_shared<models::critic::Critic>(10, 1);
+    // targetCritic = std::make_shared<models::critic::Critic>(10, 1);
+
+    auto obsDim = 10;
+    auto actionDim = 4;
+
+    auto criticInputDim = obsDim * env::hunterCount;
+    auto actorInputDim = obsDim;
+
+    critic =
+        std::make_shared<models::critic::Critic>(criticInputDim, actionDim);
+    targetCritic =
+        std::make_shared<models::critic::Critic>(criticInputDim, actionDim);
+
+    actor = std::make_shared<models::actor::Actor>(actorInputDim, actionDim);
+    targetActor =
+        std::make_shared<models::actor::Actor>(actorInputDim, actionDim);
+
+    // for (size_t i = 0; i < critic->parameters().size(); i++) {
+    //     targetCritic->parameters().data()[i].copy_(
+    //         critic->parameters()[i].data());
+    // }
+    // for (size_t i = 0; i < actor->parameters().size(); i++) {
+    //     targetActor->parameters().data()[i].copy_(
+    //         actor->parameters()[i].data());
+    // }
 
     nextAction = action::Action::NOTHING;
 }

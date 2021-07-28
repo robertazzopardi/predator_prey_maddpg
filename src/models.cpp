@@ -34,18 +34,15 @@ int boltzmannDistribution(torch::Tensor output, int shape) {
 } // namespace
 
 Actor::Actor(int obsDim, int actionDim) {
-    this->obsDim = obsDim;
-    this->actionDim = actionDim;
-
-    fc1 = register_module("fc1", torch::nn::Linear(this->obsDim, 512));
+    fc1 = register_module("fc1", torch::nn::Linear(obsDim, 512));
     fc2 = register_module("fc2", torch::nn::Linear(512, 128));
-    fc3 = register_module("fc3", torch::nn::Linear(128, this->actionDim));
+    fc3 = register_module("fc3", torch::nn::Linear(128, actionDim));
 }
 
 torch::Tensor Actor::forward(torch::Tensor obs) {
-    auto x = torch::relu(fc1->forward(obs));
-    x = torch::relu(fc2->forward(x));
-    x = torch::tanh(fc3->forward(x));
+    auto x = torch::relu(fc1(obs));
+    x = torch::relu(fc2(x));
+    x = torch::tanh(fc3(x));
 
     return x;
 }
@@ -62,23 +59,18 @@ int Actor::nextAction(torch::Tensor output) {
 namespace models::critic {
 
 Critic::Critic(int obsDim, int actionDim) {
-    this->obsDim = obsDim;
-    this->actionDim = actionDim;
-
-    fc1 = register_module("fc1", torch::nn::Linear(this->obsDim, 1024));
-    fc2 =
-        register_module("fc2", torch::nn::Linear(1024 + this->actionDim, 512));
+    fc1 = register_module("fc1", torch::nn::Linear(obsDim, 1024));
+    fc2 = register_module("fc2", torch::nn::Linear(1024 + actionDim, 512));
     fc3 = register_module("fc3", torch::nn::Linear(512, 300));
     fc4 = register_module("fc4", torch::nn::Linear(300, 1));
 }
 
 torch::Tensor Critic::forward(torch::Tensor x, torch::Tensor a) {
-    x = torch::relu(fc1->forward(x));
-    auto xa_cat = torch::cat({x, a}, 1);
-    auto xa = torch::relu(fc2->forward(xa_cat));
-    xa = torch::relu(fc3->forward(xa));
-    auto qval = fc4->forward(xa);
-
+    x = torch::relu(fc1(x));
+    auto xaCat = torch::cat({x, a}, 1);
+    auto xa = torch::relu(fc2(xaCat));
+    xa = torch::relu(fc3(xa));
+    auto qval = fc4(xa);
     return qval;
 }
 
