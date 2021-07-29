@@ -54,14 +54,17 @@ hunter::Hunter::Hunter(bool verbose, colour::Colour colour)
     }
 }
 
-float hunter::Hunter::getReward(action::Action action) {
-    if (action == action::Action::NOTHING) {
-        return 10.0f;
-    } else {
-        return -10.0f;
-    }
+float hunter::Hunter::getReward(action::Action action __unused) {
+    // if (action == action::Action::NOTHING) {
+    //     return 10.0f;
+    // } else {
+    //     return -10.0f;
+    // }
 
-    // return 0.0f;
+    if (isAtGoal()) {
+        return 0.0f;
+    }
+    return -0.1f;
 }
 
 // action::Action
@@ -86,8 +89,8 @@ float hunter::Hunter::getAction(torch::Tensor x) {
 
     auto maxValue = getMaxValueIndex(outputValues, output.size(0));
 
-    std::cout << action::toString(action::getActionFromIndex(maxValue))
-              << std::endl;
+    // std::cout << action::toString(action::getActionFromIndex(maxValue))
+    //           << std::endl;
 
     return maxValue;
 }
@@ -113,8 +116,8 @@ bool hunter::Hunter::isAtGoal() {
     auto x = getX();
     auto y = getY();
     for (auto var : robosim::envcontroller::robots) {
-        if (typeid(var) == typeid(prey::Prey)) {
-            auto prey = std::static_pointer_cast<prey::Prey>(var);
+        auto prey = std::dynamic_pointer_cast<prey::Prey>(var);
+        if (prey) {
             auto px = prey->getX();
             auto py = prey->getY();
             return (x == direction::Direction(direction::Dir::UP).px(px) &&
@@ -128,18 +131,6 @@ bool hunter::Hunter::isAtGoal() {
         }
     }
     return false;
-    // int px = env::prey->getX();
-    // int py = env::prey->getY();
-    // int x = getX();
-    // int y = getY();
-    // return (x == direction::Direction(direction::Dir::UP).px(px) &&
-    //         y == direction::Direction(direction::Dir::UP).py(py)) ||
-    //        (x == direction::Direction(direction::Dir::DOWN).px(px) &&
-    //         y == direction::Direction(direction::Dir::DOWN).py(py)) ||
-    //        (x == direction::Direction(direction::Dir::LEFT).px(px) &&
-    //         y == direction::Direction(direction::Dir::LEFT).py(py)) ||
-    //        (x == direction::Direction(direction::Dir::RIGHT).px(px) &&
-    //         y == direction::Direction(direction::Dir::RIGHT).py(py));
 }
 
 void hunter::Hunter::update(agent::UpdateData updateData) {

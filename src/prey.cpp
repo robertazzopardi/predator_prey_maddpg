@@ -48,6 +48,7 @@ bool prey::Prey::isTrapped() {
         }
     }
 
+    // std::cout << count << std::endl;
     return count > 3;
 }
 

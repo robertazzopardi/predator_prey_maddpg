@@ -88,19 +88,19 @@ void maddpg::run(int maxEpisodes, int maxSteps) {
     for (int episode = 0; episode < maxEpisodes; episode++) {
         // std::cout << "Episode: " << episode << std::endl;
         auto states = env::reset();
-        auto epReward = 0;
+        auto epReward = 0.0f;
 
         int step = 0;
         for (; step < maxSteps; step++) {
-            if (!robosim::envcontroller::isRunning()) {
+            if (!robosim::envcontroller::isRunning())
                 return;
-            }
 
             auto actions = getActions(states);
             auto [nextStates, rewards, done] = env::step(actions);
 
-            epReward =
-                std::accumulate(rewards.begin(), rewards.end(), epReward);
+            // epReward =
+            //     std::accumulate(rewards.begin(), rewards.end(), epReward);
+            epReward = std::reduce(rewards.begin(), rewards.end(), epReward);
 
             if (done || step == maxSteps - 1) {
                 break;
@@ -126,7 +126,8 @@ void maddpg::run(int maxEpisodes, int maxSteps) {
         std::cout << "Episode: " << episode << " | Step: " << step
                   << " | Average: "
                      " | Reward: "
-                     " | "
+                  << epReward
+                  << " | "
                      "Average: "
                      " | Time "
                   << std::endl;

@@ -6,8 +6,8 @@
 #include <EnvController.h>
 #include <RobotMonitor.h>
 #include <memory>
-#include <tuple>  // for tuple
-#include <vector> // for vector
+#include <tuple>
+#include <vector>
 
 namespace at {
 class Tensor;
@@ -22,7 +22,7 @@ namespace env {
 enum class Mode { TRAIN, EVAL };
 extern enum Mode mode;
 
-constexpr static auto GRID_SIZE = 10;
+constexpr static auto GRID_SIZE = 5;
 constexpr static auto BATCH_SIZE = 64;
 
 static inline auto getEnvSize() {

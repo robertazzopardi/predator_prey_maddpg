@@ -17,8 +17,9 @@ std::vector<torch::Tensor> env::reset() {
 
     std::vector<torch::Tensor> obs;
 
-    for (size_t i = 0; i < env::hunterCount; i++) {
-        auto robot = robosim::envcontroller::robots[i];
+    // for (size_t i = 0; i < env::hunterCount; i++) {
+    for (auto robot : robosim::envcontroller::robots) {
+        // auto robot = robosim::envcontroller::robots[i];
         do {
             auto randomX = getRandomPos();
             auto randomY = getRandomPos();
@@ -27,7 +28,9 @@ std::vector<torch::Tensor> env::reset() {
 
         auto agent = std::static_pointer_cast<agent::Agent>(robot);
 
-        obs.push_back(agent->getObservation());
+        auto prey = std::dynamic_pointer_cast<prey::Prey>(agent);
+        if (!prey)
+            obs.push_back(agent->getObservation());
     }
 
     return obs;
@@ -69,9 +72,10 @@ env::step(std::vector<float> actions) {
         std::any_of(robosim::envcontroller::robots.begin(),
                     robosim::envcontroller::robots.end(),
                     [](robosim::envcontroller::RobotPtr &monitor) {
-                        if (typeid(monitor) == typeid(prey::Prey)) {
-                            return std::static_pointer_cast<prey::Prey>(monitor)
-                                ->isTrapped();
+                        auto prey =
+                            std::dynamic_pointer_cast<prey::Prey>(monitor);
+                        if (prey) {
+                            return prey->isTrapped();
                         }
                         return false;
                     });

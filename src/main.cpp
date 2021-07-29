@@ -7,17 +7,17 @@
 #include <stdlib.h>
 #include <thread>
 
-int main(void) {
-    robosim::envcontroller::makeRobots<hunter::Hunter>(env::hunterCount,
-                                                       colour::OFF_BLACK);
-    robosim::envcontroller::makeRobots<prey::Prey>(env::preyCount,
-                                                   colour::OFF_RED);
+using namespace robosim::envcontroller;
 
-    robosim::envcontroller::EnvController(env::GRID_SIZE, env::GRID_SIZE, 50);
+int main(void) {
+    makeRobots<hunter::Hunter>(env::hunterCount, colour::OFF_BLACK);
+    makeRobots<prey::Prey>(env::preyCount, colour::OFF_RED);
+
+    EnvController(env::GRID_SIZE, env::GRID_SIZE, 50);
 
     std::thread th(maddpg::run, 500, 300);
 
-    robosim::envcontroller::startSimulation();
+    startSimulation();
 
     th.join();
 
