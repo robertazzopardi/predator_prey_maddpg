@@ -4,8 +4,11 @@
 
 #include "direction.h"
 #include "env.h"
-#include <RobotMonitor.h>
+#include <algorithm>
+#include <array>
 #include <memory>
+#include <random>
+#include <robosim.h>
 #include <torch/nn/modules/loss.h>
 #include <tuple>
 #include <vector>
@@ -36,6 +39,9 @@ struct Critic;
 
 namespace agent {
 
+constexpr auto actionDim = 4;
+static constexpr auto obsDim = env::agentCount << 1;
+
 using UpdateData =
     std::tuple<std::vector<float>, std::vector<at::Tensor>,
                std::array<at::Tensor, env::BATCH_SIZE>,
@@ -53,6 +59,8 @@ class Agent : public robosim::robotmonitor::RobotMonitor {
 
   protected:
     torch::nn::MSELoss MSELoss;
+
+    std::mt19937 mt;
 
     void run(bool *);
 

@@ -2,16 +2,13 @@
 #ifndef __HUNTER_H__
 #define __HUNTER_H__
 
-// #include "action.h"
+#include "action.h" // for Action
 #include "agent.h"
+#include <ATen/core/TensorBody.h> // for Tensor
 #include <torch/optim/adam.h>
 
 namespace colour {
 struct Colour;
-}
-
-namespace at {
-class Tensor;
 }
 
 namespace hunter {
@@ -23,6 +20,12 @@ class Hunter : public agent::Agent {
 
     static constexpr auto tau = 0.001f;
     static constexpr auto gamma = 0.99f;
+
+    std::uniform_real_distribution<float> distRand;
+
+    std::uniform_int_distribution<int> randAction;
+
+    float epsilon = 0.95;
 
   public:
     Hunter(bool, colour::Colour);

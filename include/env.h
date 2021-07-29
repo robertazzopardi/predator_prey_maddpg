@@ -30,9 +30,11 @@ static inline auto getEnvSize() {
 };
 
 static constexpr auto hunterCount = 4;
+static constexpr auto preyCount = 1;
+static constexpr auto agentCount = hunterCount + preyCount;
 
-extern std::shared_ptr<prey::Prey> prey;
-extern robosim::envcontroller::MonitorVec robots;
+// extern std::shared_ptr<prey::Prey> prey;
+// extern robosim::envcontroller::MonitorVec robots;
 
 std::vector<at::Tensor> reset();
 

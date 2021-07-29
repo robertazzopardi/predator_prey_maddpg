@@ -48,9 +48,6 @@ torch::Tensor Actor::forward(torch::Tensor obs) {
 }
 
 int Actor::nextAction(torch::Tensor output) {
-    // auto size = output.size(0);
-    // auto mdata = output.data_ptr<float>();
-
     return boltzmannDistribution(output, 0);
 }
 

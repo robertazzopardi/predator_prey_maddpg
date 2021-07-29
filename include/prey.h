@@ -4,13 +4,7 @@
 
 #include "action.h"
 #include "agent.h"
-// #include <ATen/core/TensorBody.h>
-#include <algorithm>
-#include <random>
-
-namespace at {
-class Tensor;
-}
+#include <ATen/core/TensorBody.h>
 
 namespace colour {
 struct Colour;
@@ -20,8 +14,7 @@ namespace prey {
 
 class Prey : public agent::Agent {
   private:
-    std::mt19937 mt;
-    std::uniform_int_distribution<int> randomAction;
+    std::uniform_real_distribution<float> dist;
 
   public:
     Prey(bool, colour::Colour);

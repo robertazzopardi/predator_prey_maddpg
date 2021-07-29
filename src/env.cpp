@@ -9,7 +9,7 @@
 #include <thread>
 #include <type_traits>
 
-robosim::envcontroller::MonitorVec env::robots;
+// robosim::envcontroller::MonitorVec robosim::envcontroller::robots;
 
 enum env::Mode env::mode = Mode::TRAIN;
 
@@ -18,13 +18,14 @@ std::vector<torch::Tensor> env::reset() {
     std::vector<torch::Tensor> obs;
 
     for (size_t i = 0; i < env::hunterCount; i++) {
+        auto robot = robosim::envcontroller::robots[i];
         do {
             auto randomX = getRandomPos();
             auto randomY = getRandomPos();
-            robots[i]->setPose(randomX, randomY, 0);
-        } while (isSamePosition(robots[i]));
+            robot->setPose(randomX, randomY, 0);
+        } while (isSamePosition(robot));
 
-        auto agent = std::static_pointer_cast<agent::Agent>(robots[i]);
+        auto agent = std::static_pointer_cast<agent::Agent>(robot);
 
         obs.push_back(agent->getObservation());
     }
@@ -42,7 +43,8 @@ env::step(std::vector<float> actions) {
     std::vector<std::thread> threads;
 
     for (size_t i = 0; i < env::hunterCount; i++) {
-        auto agent = std::static_pointer_cast<agent::Agent>(env::robots[i]);
+        auto agent = std::static_pointer_cast<agent::Agent>(
+            robosim::envcontroller::robots[i]);
 
         threads.push_back(std::thread(&agent::Agent::executeAction, agent,
                                       action::getActionFromIndex(actions[i])));
@@ -55,19 +57,31 @@ env::step(std::vector<float> actions) {
     }
 
     for (size_t i = 0; i < env::hunterCount; i++) {
-        auto agent = std::static_pointer_cast<agent::Agent>(env::robots[i]);
+        auto agent = std::static_pointer_cast<agent::Agent>(
+            robosim::envcontroller::robots[i]);
         nextStates.push_back(agent->getObservation());
         auto reward = agent->getReward(action::getActionFromIndex(actions[i]));
         rewards.push_back(reward);
     }
 
-    bool trapped = env::prey->isTrapped();
+    // bool trapped = env::prey->isTrapped();
+    auto trapped =
+        std::any_of(robosim::envcontroller::robots.begin(),
+                    robosim::envcontroller::robots.end(),
+                    [](robosim::envcontroller::RobotPtr &monitor) {
+                        if (typeid(monitor) == typeid(prey::Prey)) {
+                            return std::static_pointer_cast<prey::Prey>(monitor)
+                                ->isTrapped();
+                        }
+                        return false;
+                    });
 
     return {nextStates, rewards, trapped};
 }
 
 bool env::isSamePosition(robosim::envcontroller::RobotPtr robot) {
-    return std::any_of(env::robots.begin(), env::robots.end(),
+    return std::any_of(robosim::envcontroller::robots.begin(),
+                       robosim::envcontroller::robots.end(),
                        [robot](robosim::envcontroller::RobotPtr &agent) {
                            return robot != agent &&
                                   agent->getX() == robot->getX() &&

@@ -2,10 +2,6 @@
 #ifndef __MADDPG_H__
 #define __MADDPG_H__
 
-// #include "action.h"
-// #include "env.h"
-// #include "replayBuffer.h"
-// #include <array>
 #include <vector>
 
 namespace at {

@@ -2,23 +2,21 @@
 #include "env.h"
 #include "hunter.h"
 #include <Colour.h>                                           // for Colour
-#include <RobotMonitor.h>                                     // for Monito...
+#include <EnvController.h>                                    // for Monito...
 #include <memory>                                             // for shared...
 #include <sys/cdefs.h>                                        // for __unused
 #include <torch/csrc/autograd/generated/variable_factories.h> // for tensor
 #include <type_traits>                                        // for remove...
+#include <vector>                                             // for vector
+
+namespace hunter {
+class Hunter;
+}
 
 prey::Prey::Prey(bool verbose, colour::Colour colour)
-    : agent::Agent(verbose, colour), mt(std::random_device{}()),
-      randomAction(0, action::ACTION_COUNT) {}
+    : agent::Agent(verbose, colour), dist(0, action::ACTION_COUNT) {}
 
-// action::Action prey::Prey::getAction(torch::Tensor states __unused) {
-//     return action::ACTIONS[randomAction(mt)];
-// }
-
-float prey::Prey::getAction(torch::Tensor states __unused) {
-    return randomAction(mt);
-}
+float prey::Prey::getAction(torch::Tensor states __unused) { return dist(mt); }
 
 torch::Tensor prey::Prey::getObservation() {
     return torch::tensor({1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
@@ -43,7 +41,7 @@ bool prey::Prey::isTrapped() {
         count++;
     }
 
-    for (auto var : env::robots) {
+    for (auto var : robosim::envcontroller::robots) {
         if (var.get() != this &&
             std::static_pointer_cast<hunter::Hunter>(var)->isAtGoal()) {
             count++;

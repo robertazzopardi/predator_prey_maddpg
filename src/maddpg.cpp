@@ -26,7 +26,8 @@ std::vector<float> maddpg::getActions(std::vector<torch::Tensor> states) {
     std::vector<float> actions;
 
     for (size_t i = 0; i < env::hunterCount; i++) {
-        auto action = std::static_pointer_cast<agent::Agent>(env::robots[i])
+        auto action = std::static_pointer_cast<agent::Agent>(
+                          robosim::envcontroller::robots[i])
                           ->getAction(states[i]);
 
         actions.push_back(action);
@@ -50,8 +51,8 @@ void maddpg::update() {
         std::vector<torch::Tensor> nextGlobalActions;
 
         for (size_t j = 0; j < env::hunterCount; j++) {
-            auto hunter =
-                std::static_pointer_cast<agent::Agent>(env::robots[j]);
+            auto hunter = std::static_pointer_cast<agent::Agent>(
+                robosim::envcontroller::robots[j]);
             auto arr = hunter->actor->forward(torch::vstack(nextObsBatchI));
 
             std::vector<float> indexes;
@@ -70,11 +71,14 @@ void maddpg::update() {
             torch::cat(nextGlobalActions, 0)
                 .reshape({env::BATCH_SIZE, env::hunterCount});
 
-        std::static_pointer_cast<agent::Agent>(env::robots[i])
+        std::static_pointer_cast<agent::Agent>(
+            robosim::envcontroller::robots[i])
             ->update({indivRewardBatchI, obsBatchI, globalStateBatch,
                       globalActionsBatch, globalNextStateBatch,
                       nextGlobalActionsTemp});
-        std::static_pointer_cast<agent::Agent>(env::robots[i])->updateTarget();
+        std::static_pointer_cast<agent::Agent>(
+            robosim::envcontroller::robots[i])
+            ->updateTarget();
     }
 }
 

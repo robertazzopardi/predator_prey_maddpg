@@ -19,12 +19,29 @@ namespace {
 
 // void copyParameters() {}
 
+static int getMaxValueIndex(float *values, int count) {
+    int maxAt = 0;
+
+    for (int i = 0; i < count; i++) {
+        maxAt = values[i] > values[maxAt] ? i : maxAt;
+    }
+
+    return maxAt;
+}
+
+static inline float normalise(int x, int min, int max) {
+    return (2 * ((float)(x - min) / (max - min))) - 1;
+    // return 1 - (x - min) / (float) (max - min);
+    // return x;
+}
+
 } // namespace
 
 hunter::Hunter::Hunter(bool verbose, colour::Colour colour)
     : agent::Agent(verbose, colour),
-      criticOptimiser(critic->parameters(), 0.001),
-      actorOptimiser(actor->parameters(), 0.04) {
+      criticOptimiser(critic->parameters(), 1e-3),
+      actorOptimiser(actor->parameters(), 1e-4), distRand(0, 1),
+      randAction(0, action::ACTION_COUNT) {
 
     for (size_t i = 0; i < critic->parameters().size(); i++) {
         targetCritic->parameters()[i].data().copy_(
@@ -38,42 +55,91 @@ hunter::Hunter::Hunter(bool verbose, colour::Colour colour)
 }
 
 float hunter::Hunter::getReward(action::Action action) {
-    if (action == action::Action::FORWARD) {
-        return 1.0f;
+    if (action == action::Action::NOTHING) {
+        return 10.0f;
     } else {
-        return -1.0f;
+        return -10.0f;
     }
 
     // return 0.0f;
 }
 
 // action::Action
-float hunter::Hunter::getAction(torch::Tensor states) {
-    auto output = actor->forward(states);
-    auto nextAction = actor->nextAction(output);
-    // auto action = action::ACTIONS[nextAction];
-    // return action;
-    return static_cast<float>(nextAction);
+float hunter::Hunter::getAction(torch::Tensor x) {
+    // auto output = actor->forward(states);
+    // auto nextAction = actor->nextAction(output);
+    // return static_cast<float>(nextAction);
+
+    float random = distRand(mt);
+    if (random < epsilon) {
+        auto action = randAction(mt);
+        if (epsilon > 0)
+            epsilon *= 0.997;
+        return action;
+    }
+    if (epsilon > 0)
+        epsilon *= 0.997;
+
+    auto output = actor->forward(x);
+
+    auto outputValues = static_cast<float *>(output.data_ptr());
+
+    auto maxValue = getMaxValueIndex(outputValues, output.size(0));
+
+    std::cout << action::toString(action::getActionFromIndex(maxValue))
+              << std::endl;
+
+    return maxValue;
 }
 
 torch::Tensor hunter::Hunter::getObservation() {
-    return torch::tensor(
-        {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f});
+
+    // return torch::tensor(
+    //     {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f});
+
+    static std::array<float, agent::obsDim> observation;
+    int count = 0;
+    for (auto var : robosim::envcontroller::robots) {
+        observation[count++] = normalise(
+            var->getGridX(), 0, robosim::envcontroller::getCellWidth());
+        observation[count++] = normalise(
+            var->getGridY(), 0, robosim::envcontroller::getCellWidth());
+    }
+
+    return torch::from_blob(std::move(observation.data()), {agent::obsDim});
 }
 
 bool hunter::Hunter::isAtGoal() {
-    int px = env::prey->getX();
-    int py = env::prey->getY();
-    int x = getX();
-    int y = getY();
-    return (x == direction::Direction(direction::Dir::UP).px(px) &&
-            y == direction::Direction(direction::Dir::UP).py(py)) ||
-           (x == direction::Direction(direction::Dir::DOWN).px(px) &&
-            y == direction::Direction(direction::Dir::DOWN).py(py)) ||
-           (x == direction::Direction(direction::Dir::LEFT).px(px) &&
-            y == direction::Direction(direction::Dir::LEFT).py(py)) ||
-           (x == direction::Direction(direction::Dir::RIGHT).px(px) &&
-            y == direction::Direction(direction::Dir::RIGHT).py(py));
+    auto x = getX();
+    auto y = getY();
+    for (auto var : robosim::envcontroller::robots) {
+        if (typeid(var) == typeid(prey::Prey)) {
+            auto prey = std::static_pointer_cast<prey::Prey>(var);
+            auto px = prey->getX();
+            auto py = prey->getY();
+            return (x == direction::Direction(direction::Dir::UP).px(px) &&
+                    y == direction::Direction(direction::Dir::UP).py(py)) ||
+                   (x == direction::Direction(direction::Dir::DOWN).px(px) &&
+                    y == direction::Direction(direction::Dir::DOWN).py(py)) ||
+                   (x == direction::Direction(direction::Dir::LEFT).px(px) &&
+                    y == direction::Direction(direction::Dir::LEFT).py(py)) ||
+                   (x == direction::Direction(direction::Dir::RIGHT).px(px) &&
+                    y == direction::Direction(direction::Dir::RIGHT).py(py));
+        }
+    }
+    return false;
+    // int px = env::prey->getX();
+    // int py = env::prey->getY();
+    // int x = getX();
+    // int y = getY();
+    // return (x == direction::Direction(direction::Dir::UP).px(px) &&
+    //         y == direction::Direction(direction::Dir::UP).py(py)) ||
+    //        (x == direction::Direction(direction::Dir::DOWN).px(px) &&
+    //         y == direction::Direction(direction::Dir::DOWN).py(py)) ||
+    //        (x == direction::Direction(direction::Dir::LEFT).px(px) &&
+    //         y == direction::Direction(direction::Dir::LEFT).py(py)) ||
+    //        (x == direction::Direction(direction::Dir::RIGHT).px(px) &&
+    //         y == direction::Direction(direction::Dir::RIGHT).py(py));
 }
 
 void hunter::Hunter::update(agent::UpdateData updateData) {

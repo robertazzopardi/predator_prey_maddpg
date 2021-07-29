@@ -11,10 +11,8 @@
 #include <type_traits>
 
 agent::Agent::Agent(bool verbose, colour::Colour colour)
-    : robosim::robotmonitor::RobotMonitor(verbose, colour), MSELoss() {
-
-    auto obsDim = 10;
-    auto actionDim = 4;
+    : robosim::robotmonitor::RobotMonitor(verbose, colour), MSELoss(),
+      mt(std::random_device{}()) {
 
     auto criticInputDim = obsDim * env::hunterCount;
     auto actorInputDim = obsDim;
@@ -99,7 +97,8 @@ bool agent::Agent::canMove() {
     auto x = dir.px(getX());
     auto y = dir.py(getY());
 
-    if (std::any_of(env::robots.begin(), env::robots.end(),
+    if (std::any_of(robosim::envcontroller::robots.begin(),
+                    robosim::envcontroller::robots.end(),
                     [&](const robosim::envcontroller::RobotPtr &r) {
                         return (r.get() != this) &&
                                (r->getX() == x && r->getY() == y);
