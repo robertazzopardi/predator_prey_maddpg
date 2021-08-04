@@ -1,26 +1,21 @@
-#include "maddpg.h"
-#include "env.h"
-#include "models.h" // for Actor
-#include "prey.h"
-#include "replayBuffer.h"
-#include <ATen/Functions.h>       // for stack
-#include <ATen/TensorOperators.h> // for Tensor...
-#include <ATen/core/TensorBody.h> // for Tensor
-#include <EnvController.h>        // for isRunning
-#include <RobotMonitor.h>         // for Monito...
-#include <__tuple>                // for tuple_...
-#include <chrono>                 // for millis...
-#include <iostream>               // for operat...
+#include "../include/maddpg.h"
+#include "../include/agent.h"
+#include "../include/env.h"
+#include "../include/models.h"  // for Actor
+#include "../include/replayBuffer.h"
+#include <ATen/Functions.h>        // for stack
+#include <ATen/TensorOperators.h>  // for Tensor...
+#include <ATen/core/TensorBody.h>  // for Tensor
+#include <EnvController.h>         // for isRunning
+#include <__tuple>                 // for tuple_...
+#include <chrono>                  // for millis...
+#include <iostream>                // for operat...
 #include <memory>
-#include <numeric>                                            // for accumu...
-#include <stddef.h>                                           // for size_t
-#include <thread>                                             // for sleep_for
-#include <torch/csrc/autograd/generated/variable_factories.h> // for tensor
+#include <numeric>                                             // for accumu...
+#include <stddef.h>                                            // for size_t
+#include <thread>                                              // for sleep_for
+#include <torch/csrc/autograd/generated/variable_factories.h>  // for tensor
 #include <type_traits>
-
-namespace agent {
-class Agent;
-}
 
 std::vector<float> maddpg::getActions(std::vector<torch::Tensor> states) {
     std::vector<float> actions;
@@ -42,7 +37,6 @@ void maddpg::update() {
         replaybuffer::sample();
 
     for (size_t i = 0; i < env::hunterCount; i++) {
-
         auto obsBatchI = obsBatch[i];
         auto indivActionBatchI = indivActionBatch[i];
         auto indivRewardBatchI = indivRewardBatch[i];
@@ -92,8 +86,7 @@ void maddpg::run(int maxEpisodes, int maxSteps) {
 
         int step = 0;
         for (; step < maxSteps; step++) {
-            if (!robosim::envcontroller::isRunning())
-                return;
+            if (!robosim::envcontroller::isRunning()) return;
 
             auto actions = getActions(states);
             auto [nextStates, rewards, done] = env::step(actions);
@@ -133,5 +126,5 @@ void maddpg::run(int maxEpisodes, int maxSteps) {
                   << std::endl;
     }
 
-    robosim::envcontroller::updateRunning();
+    robosim::envcontroller::stop();
 }

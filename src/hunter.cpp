@@ -1,23 +1,28 @@
-#include "hunter.h"
-#include "direction.h"
-#include "env.h"
-#include "models.h"
-#include "prey.h"
+#include "../include/hunter.h"
+#include "../include/direction.h"
+#include "../include/models.h"
+#include "../include/prey.h"
 #include <ATen/Functions.h>
 #include <ATen/TensorOperators.h>
 #include <Colour.h>
+#include <EnvController.h>  // for getCel...
+#include <array>            // for array
 #include <c10/core/Scalar.h>
 #include <memory>
 #include <stddef.h>
+#include <sys/cdefs.h>  // for __unused
 #include <torch/csrc/autograd/generated/variable_factories.h>
 #include <torch/nn/modules/loss.h>
 #include <torch/nn/pimpl.h>
 #include <torch/nn/utils/clip_grad.h>
 #include <type_traits>
+#include <vector>  // for vector
+
+namespace prey {
+class Prey;
+}
 
 namespace {
-
-// void copyParameters() {}
 
 static int getMaxValueIndex(float *values, int count) {
     int maxAt = 0;
@@ -30,12 +35,12 @@ static int getMaxValueIndex(float *values, int count) {
 }
 
 static inline float normalise(int x, int min, int max) {
-    return (2 * ((float)(x - min) / (max - min))) - 1;
+    return (2 * (static_cast<float>((x - min)) / (max - min))) - 1;
     // return 1 - (x - min) / (float) (max - min);
     // return x;
 }
 
-} // namespace
+}  // namespace
 
 hunter::Hunter::Hunter(bool verbose, colour::Colour colour)
     : agent::Agent(verbose, colour),
@@ -67,7 +72,6 @@ float hunter::Hunter::getReward(action::Action action __unused) {
     return -0.1f;
 }
 
-// action::Action
 float hunter::Hunter::getAction(torch::Tensor x) {
     // auto output = actor->forward(states);
     // auto nextAction = actor->nextAction(output);
@@ -76,12 +80,10 @@ float hunter::Hunter::getAction(torch::Tensor x) {
     float random = distRand(mt);
     if (random < epsilon) {
         auto action = randAction(mt);
-        if (epsilon > 0)
-            epsilon *= 0.997;
+        if (epsilon > 0) epsilon *= 0.997;
         return action;
     }
-    if (epsilon > 0)
-        epsilon *= 0.997;
+    if (epsilon > 0) epsilon *= 0.997;
 
     auto output = actor->forward(x);
 
@@ -89,19 +91,13 @@ float hunter::Hunter::getAction(torch::Tensor x) {
 
     auto maxValue = getMaxValueIndex(outputValues, output.size(0));
 
-    // std::cout << action::toString(action::getActionFromIndex(maxValue))
-    //           << std::endl;
-
     return maxValue;
 }
 
 torch::Tensor hunter::Hunter::getObservation() {
-
-    // return torch::tensor(
-    //     {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f});
-
-    static std::array<float, agent::obsDim> observation;
+    static std::array<float, obsDim> observation;
     int count = 0;
+
     for (auto var : robosim::envcontroller::robots) {
         observation[count++] = normalise(
             var->getGridX(), 0, robosim::envcontroller::getCellWidth());
@@ -109,12 +105,13 @@ torch::Tensor hunter::Hunter::getObservation() {
             var->getGridY(), 0, robosim::envcontroller::getCellWidth());
     }
 
-    return torch::from_blob(std::move(observation.data()), {agent::obsDim});
+    return torch::from_blob(std::move(observation.data()), {obsDim});
 }
 
 bool hunter::Hunter::isAtGoal() {
     auto x = getX();
     auto y = getY();
+
     for (auto var : robosim::envcontroller::robots) {
         auto prey = std::dynamic_pointer_cast<prey::Prey>(var);
         if (prey) {

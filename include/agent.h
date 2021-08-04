@@ -1,14 +1,12 @@
-
 #ifndef __AGENT_H__
 #define __AGENT_H__
 
-#include "direction.h"
-#include "env.h"
-#include <algorithm>
+#include "./direction.h"
+#include "./env.h"
+#include <RobotMonitor.h>
 #include <array>
 #include <memory>
 #include <random>
-#include <robosim.h>
 #include <torch/nn/modules/loss.h>
 #include <tuple>
 #include <vector>
@@ -35,20 +33,15 @@ namespace critic {
 struct Critic;
 }
 
-} // namespace models
+}  // namespace models
 
 namespace agent {
-
-constexpr auto actionDim = 4;
-static constexpr auto obsDim = env::agentCount << 1;
 
 using UpdateData =
     std::tuple<std::vector<float>, std::vector<at::Tensor>,
                std::array<at::Tensor, env::BATCH_SIZE>,
                std::array<at::Tensor, env::BATCH_SIZE>,
                std::array<at::Tensor, env::BATCH_SIZE>, at::Tensor>;
-
-// std::array<at::Tensor, env::BATCH_SIZE>
 
 class Agent : public robosim::robotmonitor::RobotMonitor {
   private:
@@ -63,6 +56,9 @@ class Agent : public robosim::robotmonitor::RobotMonitor {
     std::mt19937 mt;
 
     void run(bool *);
+
+    static constexpr auto actionDim = 4;
+    static constexpr auto obsDim = env::agentCount << 1;
 
   public:
     action::Action nextAction;
@@ -91,6 +87,7 @@ class Agent : public robosim::robotmonitor::RobotMonitor {
 
 using AgentPtr = std::shared_ptr<Agent>;
 
-} // namespace agent
+}  // namespace agent
 
-#endif // !__AGENT_H__
+#endif  // !__AGENT_H__
+

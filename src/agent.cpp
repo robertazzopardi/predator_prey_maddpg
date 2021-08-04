@@ -11,8 +11,8 @@
 #include <type_traits>
 
 agent::Agent::Agent(bool verbose, colour::Colour colour)
-    : robosim::robotmonitor::RobotMonitor(verbose, colour), MSELoss(),
-      mt(std::random_device{}()) {
+    : robosim::robotmonitor::RobotMonitor(verbose, colour), gx(0), gy(0),
+      MSELoss(), mt(std::random_device {}()) {
 
     auto criticInputDim = obsDim * env::hunterCount;
     auto actorInputDim = obsDim;
@@ -58,7 +58,6 @@ void agent::Agent::moveDirection(direction::Direction direction) {
 void agent::Agent::executeAction(action::Action nextAction) {
     if (nextAction != action::Action::NOTHING) {
         switch (nextAction) {
-
         case action::Action::FORWARD:
             moveDirection(direction::Direction::fromDegree(getHeading()));
             break;

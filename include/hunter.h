@@ -1,10 +1,11 @@
-
 #ifndef __HUNTER_H__
 #define __HUNTER_H__
 
-#include "action.h" // for Action
-#include "agent.h"
-#include <ATen/core/TensorBody.h> // for Tensor
+#include "../include/action.h"  // for Action
+#include "../include/agent.h"
+#include <ATen/core/TensorBody.h>  // for Tensor
+#include <algorithm>               // for uniform_int_distribution
+#include <random>                  // for uniform_real_distribution
 #include <torch/optim/adam.h>
 
 namespace colour {
@@ -14,7 +15,7 @@ struct Colour;
 namespace hunter {
 
 class Hunter : public agent::Agent {
-  private:
+private:
     torch::optim::Adam criticOptimiser;
     torch::optim::Adam actorOptimiser;
 
@@ -27,23 +28,23 @@ class Hunter : public agent::Agent {
 
     float epsilon = 0.95;
 
-  public:
+public:
     Hunter(bool, colour::Colour);
 
-    // action::Action getAction(at::Tensor);
-    float getAction(at::Tensor);
+    float getAction(at::Tensor) override;
 
-    at::Tensor getObservation();
+    at::Tensor getObservation() override;
 
     bool isAtGoal();
 
-    float getReward(action::Action);
+    float getReward(action::Action) override;
 
-    void update(agent::UpdateData);
+    void update(agent::UpdateData) override;
 
-    void updateTarget();
+    void updateTarget() override;
 };
 
-} // namespace hunter
+}  // namespace hunter
 
-#endif // !__HUNTER_H__
+#endif  // !__HUNTER_H__
+

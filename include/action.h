@@ -6,12 +6,14 @@ namespace action {
 
 enum class Action { FORWARD = 0, LEFT = 1, RIGHT = 2, NOTHING = 3 };
 
-const static Action ACTIONS[] = {Action::FORWARD, Action::LEFT, Action::RIGHT,
+static const Action ACTIONS[] = {Action::FORWARD, Action::LEFT, Action::RIGHT,
                                  Action::NOTHING};
 
-static constexpr auto ACTION_COUNT = sizeof(ACTIONS) / sizeof(*ACTIONS);
+// static const auto ACTION_COUNT = sizeof(ACTIONS) / sizeof(*ACTIONS);
+static constexpr auto ACTION_COUNT =
+    sizeof(action::ACTIONS) / sizeof(*action::ACTIONS);
 
-static inline auto toString(Action ac) {
+inline auto toString(Action ac) {
     switch (ac) {
     case Action::FORWARD:
         return "FORWARD";
@@ -44,6 +46,7 @@ static inline auto toString(Action ac) {
 
 inline Action getActionFromIndex(int index) { return ACTIONS[index]; }
 
-} // namespace action
+}  // namespace action
 
-#endif // !__ACTION_H__
+#endif  // !__ACTION_H__
+

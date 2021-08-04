@@ -1,13 +1,13 @@
-#include "prey.h"
-#include "env.h"
-#include "hunter.h"
-#include <Colour.h>                                           // for Colour
-#include <EnvController.h>                                    // for Monito...
-#include <memory>                                             // for shared...
-#include <sys/cdefs.h>                                        // for __unused
-#include <torch/csrc/autograd/generated/variable_factories.h> // for tensor
-#include <type_traits>                                        // for remove...
-#include <vector>                                             // for vector
+#include "../include/prey.h"
+#include "../include/env.h"
+#include "../include/hunter.h"
+#include <Colour.h>                                            // for Colour
+#include <EnvController.h>                                     // for Monito...
+#include <memory>                                              // for shared...
+#include <sys/cdefs.h>                                         // for __unused
+#include <torch/csrc/autograd/generated/variable_factories.h>  // for tensor
+#include <type_traits>                                         // for remove...
+#include <vector>                                              // for vector
 
 namespace hunter {
 class Hunter;
@@ -48,7 +48,6 @@ bool prey::Prey::isTrapped() {
         }
     }
 
-    // std::cout << count << std::endl;
     return count > 3;
 }
 
@@ -57,3 +56,4 @@ float prey::Prey::getReward(action::Action action __unused) { return 0.0f; }
 void prey::Prey::update(agent::UpdateData __unused) {}
 
 void prey::Prey::updateTarget() {}
+

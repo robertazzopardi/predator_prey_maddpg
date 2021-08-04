@@ -1,25 +1,21 @@
-#include "env.h"
-#include "agent.h"
-#include "prey.h"
+#include "../include/env.h"
+#include "../include/agent.h"
+#include "../include/prey.h"
 #include <ATen/core/TensorBody.h>
-#include <RobotMonitor.h>
+// #include <RobotMonitor.h>
 #include <algorithm>
+#include <memory>
 #include <random>
 #include <stddef.h>
 #include <thread>
 #include <type_traits>
 
-// robosim::envcontroller::MonitorVec robosim::envcontroller::robots;
-
 enum env::Mode env::mode = Mode::TRAIN;
 
 std::vector<torch::Tensor> env::reset() {
-
     std::vector<torch::Tensor> obs;
 
-    // for (size_t i = 0; i < env::hunterCount; i++) {
     for (auto robot : robosim::envcontroller::robots) {
-        // auto robot = robosim::envcontroller::robots[i];
         do {
             auto randomX = getRandomPos();
             auto randomY = getRandomPos();
@@ -29,8 +25,7 @@ std::vector<torch::Tensor> env::reset() {
         auto agent = std::static_pointer_cast<agent::Agent>(robot);
 
         auto prey = std::dynamic_pointer_cast<prey::Prey>(agent);
-        if (!prey)
-            obs.push_back(agent->getObservation());
+        if (!prey) obs.push_back(agent->getObservation());
     }
 
     return obs;
@@ -38,7 +33,6 @@ std::vector<torch::Tensor> env::reset() {
 
 std::tuple<std::vector<torch::Tensor>, std::vector<float>, bool>
 env::step(std::vector<float> actions) {
-
     std::vector<float> rewards;
 
     std::vector<torch::Tensor> nextStates;
@@ -55,8 +49,7 @@ env::step(std::vector<float> actions) {
 
     // block and allows robots to execute actions at the same time
     for (auto &th : threads) {
-        if (th.joinable())
-            th.join();
+        if (th.joinable()) th.join();
     }
 
     for (size_t i = 0; i < env::hunterCount; i++) {
@@ -67,7 +60,7 @@ env::step(std::vector<float> actions) {
         rewards.push_back(reward);
     }
 
-    // bool trapped = env::prey->isTrapped();
+    // Check the trapped status of all of the possible prey agents
     auto trapped =
         std::any_of(robosim::envcontroller::robots.begin(),
                     robosim::envcontroller::robots.end(),
@@ -101,5 +94,7 @@ int env::getRandomPos() {
     std::uniform_int_distribution<int> random(min, max);
     auto rndPos = random(mt);
     rndPos += rndPos % 2 == 0 ? 1 : 0;
+
     return (rndPos * robosim::envcontroller::getCellWidth()) / 2;
 }
+
